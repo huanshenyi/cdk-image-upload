@@ -11,8 +11,38 @@ interface UploadRequestBody {
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
-    // リクエストボディからBase64エンコードされた画像を取得
-    const body = JSON.parse(event.body || '{}') as UploadRequestBody;
+    // OPTIONSリクエストの処理
+    if (event.httpMethod === 'OPTIONS') {
+      return {
+        statusCode: 200,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+          'Access-Control-Allow-Methods': 'POST,OPTIONS'
+        },
+        body: ''
+      };
+    }
+
+    if (!event.body) {
+      return {
+        statusCode: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({ error: 'Request body is required' })
+      };
+    }
+
+    // 🔥 ここが重要な修正部分：Base64デコードしてからJSONパース
+    let bodyString = event.body;
+    if (event.isBase64Encoded) {
+      bodyString = Buffer.from(event.body, 'base64').toString('utf-8');
+    }
+
+    const body = JSON.parse(bodyString) as UploadRequestBody;
+    
     if (!body.image || !body.contentType) {
       return {
         statusCode: 400,
@@ -24,15 +54,13 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       };
     }
 
-    // Base64デコード
+    // 残りの処理は変更なし
     const buffer = Buffer.from(body.image.replace(/^data:image\/\w+;base64,/, ''), 'base64');
     
-    // ファイル名の生成（UUID）
     const fileId = uuidv4();
     const fileExtension = body.contentType.split('/')[1];
     const fileName = `${fileId}.${fileExtension}`;
     
-    // S3にアップロード
     await s3.putObject({
       Bucket: process.env.BUCKET_NAME || '',
       Key: fileName,
