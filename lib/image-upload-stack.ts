@@ -18,7 +18,7 @@ export class ImageUploadStack extends cdk.Stack {
       versioned: false,
       lifecycleRules: [
         {
-          expiration: cdk.Duration.days(30), // 30日後に削除（コスト削減）
+          expiration: cdk.Duration.days(90), // 90日後に削除（コスト削減）
         },
       ],
     });
@@ -30,7 +30,7 @@ export class ImageUploadStack extends cdk.Stack {
       versioned: false,
       lifecycleRules: [
         {
-          expiration: cdk.Duration.days(30), // 30日後に削除（コスト削減）
+          expiration: cdk.Duration.days(90), // 90日後に削除（コスト削減）
         },
       ],
     });
@@ -38,7 +38,7 @@ export class ImageUploadStack extends cdk.Stack {
     // 画像アップロード用Lambda関数
     const uploadFunction = new NodejsFunction(this, "UploadFunction", {
       description: "画像アップロード用のLambda関数",
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       entry: "./lambda/upload-ts/index.ts",
       handler: "handler",
       memorySize: 512,
@@ -52,7 +52,7 @@ export class ImageUploadStack extends cdk.Stack {
     // リサイズ処理用Lambda関数
     const resizeFunction = new NodejsFunction(this, "ResizeFunction", {
       description: "リサイズ用のLambda関数",
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       entry: "./lambda/resize-ts/index.ts",
       handler: "handler",
       memorySize: 1024,
